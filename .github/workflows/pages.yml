@@ -1,0 +1,72 @@
+name: Pages
+
+# Builds the website from this repository and the main branch of
+# arkadia-lang/arkadia, and publishes it on main. Changes to Arkadia (its
+# guide, changelog and standard library) are picked up by the hourly run,
+# which rebuilds only when Arkadia moved since the published build.
+# Pull requests only build the site.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check whether Arkadia changed since the published build
+        id: changed
+        run: |
+          latest=$(git ls-remote https://github.com/arkadia-lang/arkadia.git refs/heads/main | cut -f1)
+          published=$(curl -fsS https://arkadia-lang.github.io/arkadia-commit.txt || true)
+          echo "latest $latest, published ${published:-none}"
+          if [ "${{ github.event_name }}" = schedule ] && [ "$latest" = "$published" ]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "commit=$latest" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v5
+        if: steps.changed.outputs.build == 'true'
+      - uses: actions/checkout@v5
+        if: steps.changed.outputs.build == 'true'
+        with:
+          repository: arkadia-lang/arkadia
+          ref: ${{ steps.changed.outputs.commit }}
+          path: arkadia
+      - uses: cachix/install-nix-action@v31
+        if: steps.changed.outputs.build == 'true'
+      - name: Build the site
+        if: steps.changed.outputs.build == 'true'
+        run: nix develop --command just arkadia=arkadia site
+      - uses: actions/upload-pages-artifact@v4
+        if: steps.changed.outputs.build == 'true'
+        with:
+          path: _site
+    outputs:
+      built: ${{ steps.changed.outputs.build }}
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && needs.build.outputs.built == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
