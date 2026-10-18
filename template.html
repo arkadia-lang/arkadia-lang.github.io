@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+$if(nav-home)$
+<title>Arkadia Lang</title>
+$else$
+<title>$pagetitle$ · Arkadia Lang</title>
+$endif$
+<meta name="description" content="Arkadia は代数的エフェクトと型クラスを備えた、正格評価の静的型付き関数型プログラミング言語です。">
+<link rel="icon" href="$root$assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="$root$style.css">
+</head>
+<body$if(nav-home)$ class="home"$endif$>
+<header class="site-header">
+  <div class="bar">
+    <a class="brand" href="$root$index.html"><img src="$root$assets/logo.png" alt="" width="28" height="28">Arkadia</a>
+    <nav aria-label="サイト">
+      <a href="$root$guide.html"$if(nav-guide)$ aria-current="page"$endif$>ガイド</a>
+      <a href="$root$std/index.html"$if(nav-std)$ aria-current="page"$endif$>標準ライブラリ</a>
+      <a href="$root$changelog.html"$if(nav-changelog)$ aria-current="page"$endif$>変更履歴</a>
+      <a href="https://github.com/arkadia-lang/arkadia">GitHub</a>
+    </nav>
+  </div>
+</header>
+<main>
+$for(include-before)$
+$include-before$
+$endfor$
+$if(toc)$
+<div class="with-sidebar">
+<nav class="sidebar toc" aria-label="目次">
+$table-of-contents$
+</nav>
+<article class="doc">
+$if(heading)$
+<h1>$heading$</h1>
+$endif$
+$body$
+</article>
+</div>
+$elseif(nav-home)$
+$body$
+$elseif(body)$
+<article class="doc narrow">
+$body$
+</article>
+$endif$
+</main>
+<footer class="site-footer">
+  <p>Arkadia Lang · <a href="https://github.com/arkadia-lang/arkadia/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/arkadia-lang/arkadia">GitHub</a></p>
+</footer>
+</body>
+</html>
